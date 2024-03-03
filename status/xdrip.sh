@@ -34,7 +34,7 @@ threshold_low="4"
 threshold_high="9"
 
 threshold_low_color="$thm_red"
-threshold_in_range_color="$thm_green"
+threshold_in_range_color="$thm_red"
 threshold_high_color="$thm_yellow"
 
 get_status() {
