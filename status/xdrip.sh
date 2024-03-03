@@ -1,22 +1,3 @@
-xdrip_local_server=""
-xdrip_server_key=""
-
-show_xdrip() {
-  local index=$1
-  local result
-  xdrip_local_server="$(get_tmux_option "@catppuccin_xdrip_server" "")"
-  xdrip_local_key="$(get_tmux_option "@catppuccin_xdrip_key" "")"
-  result="$(main)"
-
-  local icon="$(get_tmux_option "@catppuccin_xdrip_icon" "")"
-  local color="$(get_tmux_option "@catppuccin_xdrip_color" "$(get_color)")")
-  local text="$(get_tmux_option "@catppuccin_xdrip_text" "$result")"
-
-  local module=$( build_status_module "$index" "$icon" "$color" "$text" )
-
-  echo "$module"
-}
-
 data_value=0
 
 slope_single_down_icon="󰁅"
@@ -31,12 +12,32 @@ slope_none_icon="󱫃"
 threshold_low="4"
 threshold_high="9"
 
-threshold_low_color="$thm_red"
-threshold_in_range_color="$thm_red"
-threshold_high_color="$thm_yellow"
+select_color="$thm_green"
+
+show_xdrip() {
+  local index=$1
+  local icon
+  local color
+  local result
+  local text
+  local module
+  local c
+  result="$(get_status)"
+  c="$(get_color)"
+
+  icon="$(get_tmux_option "@catppuccin_xdrip_icon" "")"
+  text="$(get_tmux_option "@catppuccin_xdrip_text" "$result")"
+  color="$(get_tmux_option "@catppuccin_xdrip_color" "$select_color")"
+
+  module=$( build_status_module "$index" "$icon" "$color" "$text" )
+
+  echo "$module"
+}
 
 get_status() {
-  local data=$(curl -s $xdrip_local_server --header "api-secret: $xdrip_server_key")
+  local xdrip_local_server="$(echo $XDRIP_SERVER)"
+  local xdrip_local_key="$(echo $XDRIP_SERVER_KEY)"
+  local data=$(curl -s $xdrip_local_server --header "api-secret: $xdrip_local_key")
   data_value=$(echo $data | jq -r .bgs[].sgv)
   data_value=$(printf '%.*f\n' 0 $data_value)
 
@@ -71,17 +72,19 @@ get_status() {
 }
 
 get_color() {
+  local xdrip_local_server="$(echo $XDRIP_SERVER)"
+  local xdrip_local_key="$(echo $XDRIP_SERVER_KEY)"
+  local data=$(curl -s $xdrip_local_server --header "api-secret: $xdrip_local_key")
+  data_value=$(echo $data | jq -r .bgs[].sgv)
+  data_value=$(printf '%.*f\n' 0 $data_value)
+
   if [[ $data_value -gt $threshold_high ]]
   then
-    echo $threshold_high_color
+    select_color=$thm_yellow
   elif [[ $data_value -le $threshold_low ]]
   then
-    echo $threshold_low_color
+    select_color=$thm_red
   else
-    echo $threshold_in_range_color
+    select_color=$thm_green
   fi
-}
-
-main() {
-  get_status
 }
