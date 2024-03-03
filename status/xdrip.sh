@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 xdrip_local_server=""
 xdrip_server_key=""
 
